@@ -1,4 +1,6 @@
+using System;
 using FluentAssertions;
+using static FluentAssertions.FluentActions;
 using NUnit.Framework;
 using RomanNumeralConverter.Models;
 
@@ -31,6 +33,26 @@ namespace RomanNumeralConverter.Tests
                 string roman = RomanConverter.ConvertToRoman(i);
                 RomanConverter.ConvertToInteger(roman).Should().Be(i);
             }
+        }
+
+        [Test]
+        public void ConvertToInteger_With_Invalid_Romans_IIVI_Should_Throw_Exception()
+        {
+            Invoking(() => RomanConverter.ConvertToInteger("IIVI"))
+                .Should().Throw<ArgumentException>();
+        }
+
+        [Test]
+        public void ConvertToInteger_With_Invalid_Romans_ASDF_Should_Throw_Exception()
+        {
+            Invoking(() => RomanConverter.ConvertToInteger("ASDF"))
+                .Should().Throw<ArgumentException>();
+        }
+
+        [Test]
+        public void ConvertToInteger_With_Empty_String_Should_Return_Zero()
+        {
+            RomanConverter.ConvertToInteger("").Should().Be(0);
         }
     }
 }

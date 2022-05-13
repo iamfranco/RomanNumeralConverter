@@ -21,7 +21,7 @@ namespace RomanNumeralConverter.Models
         public static int ConvertToInteger(string roman)
         {
             if (HasInvalidRomanCharacter(roman))
-                return -1;
+                throw new ArgumentException("Input is not valid Roman Numeral");
 
             string[] romanSplitted = SplitRomanStringIntoArrayByUnit(roman);
             int sum = romanSplitted[0].Length * units[0];

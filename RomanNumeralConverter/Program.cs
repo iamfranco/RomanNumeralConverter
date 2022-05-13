@@ -27,12 +27,6 @@ while (!IsValidInput)
         continue;
     }
 
-    if (output == -1)
-    {
-        Console.WriteLine("Input is not valid Roman Numeral");
-        continue;
-    }
-
     Console.WriteLine(output);
     IsValidInput = true;
 }
