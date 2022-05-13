@@ -36,6 +36,12 @@ namespace RomanNumeralConverter.Tests
         }
 
         [Test]
+        public void ConvertToInteger_MMDCCCXCIV_Should_Return_2894()
+        {
+            RomanConverter.ConvertToInteger("MMDCCCXCIV").Should().Be(2894);
+        }
+
+        [Test]
         public void ConvertToInteger_With_Invalid_Romans_IIVI_Should_Throw_Exception()
         {
             Invoking(() => RomanConverter.ConvertToInteger("IIVI"))
