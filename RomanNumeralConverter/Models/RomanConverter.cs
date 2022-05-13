@@ -59,7 +59,7 @@ namespace RomanNumeralConverter.Models
             return romanString;
         }
 
-        private static string GetSymbolOneFiveTen(int tenToThePowerOf)
+        private static string GetSymbolOneFiveTenAsString(int tenToThePowerOf)
         {
             if (tenToThePowerOf == 3)
                 return "";
@@ -70,8 +70,11 @@ namespace RomanNumeralConverter.Models
                 _symbolOnes[tenToThePowerOf + 1]);
         }
 
-        private static (char, char, char) SplitSymbolOneFiveTenToChar(string symbolOneFiveTen) =>
-            (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
+        private static (char, char, char) GetSymbolOneFiveTenAsCharTuple(int tenToThePowerOf)
+        {
+            string symbolOneFiveTen = GetSymbolOneFiveTenAsString(tenToThePowerOf);
+            return (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
+        }
 
         private static string[] SeparateRomanStringIntoFourPartsByUnits(string roman)
         {
@@ -109,16 +112,14 @@ namespace RomanNumeralConverter.Models
 
         private static string GetRomanSubstringAtTenToThePowerOf(string roman, int tenTothePowerOf)
         {
-            string symbolOneFiveTen = GetSymbolOneFiveTen(tenTothePowerOf);
-            string[] romanNineToOne = GetRomanZeroToNineDigits(symbolOneFiveTen).Reverse().SkipLast(0).ToArray();
+            string[] romanNineToOne = GetRomanZeroToNine(tenTothePowerOf).Reverse().SkipLast(0).ToArray();
 
             return romanNineToOne.FirstOrDefault(r => roman.StartsWith(r), "");
         }
 
         private static string ConvertOneDigitToRomanSubstring(int number, int tenToThePowerOf)
         {
-            string symbolOneFiveTen = GetSymbolOneFiveTen(tenToThePowerOf);
-            (char symbolOne, char symbolFive, char symbolTen) = SplitSymbolOneFiveTenToChar(symbolOneFiveTen);
+            (char symbolOne, char symbolFive, char symbolTen) = GetSymbolOneFiveTenAsCharTuple(tenToThePowerOf);
 
             return number switch
             {
@@ -131,35 +132,33 @@ namespace RomanNumeralConverter.Models
             };
         }
 
-        private static string[] GetRomanZeroToNineDigits(string symbolOneFiveTen)
-        {
-            (char symbolOne, char symbolFive, char symbolTen) = SplitSymbolOneFiveTenToChar(symbolOneFiveTen);
-
-            return new string[]
-            {
-                "",
-                new string(symbolOne, 1),
-                new string(symbolOne, 2),
-                new string(symbolOne, 3),
-                string.Concat(symbolOne, symbolFive),
-                new string(symbolFive, 1),
-                string.Concat(symbolFive, new string(symbolOne, 1)),
-                string.Concat(symbolFive, new string(symbolOne, 2)),
-                string.Concat(symbolFive, new string(symbolOne, 3)),
-                string.Concat(symbolOne, symbolTen)
-            };
-        }
-
         private static int ConvertRomanSubstringToInteger(string romanSubstring, int tenToThePowerOf)
         {
-            string symbolOneFiveTen = GetSymbolOneFiveTen(tenToThePowerOf);
-
             bool substringOnlyHasMs = romanSubstring.All(r => r.ToString() == _symbolOnes.Last().ToString());
             if (substringOnlyHasMs)
                 return romanSubstring.Length;
 
-            string[] romanZeroToNineDigits = GetRomanZeroToNineDigits(symbolOneFiveTen);
-            return Array.IndexOf(romanZeroToNineDigits, romanSubstring);
+            string[] romanZeroToNine = GetRomanZeroToNine(tenToThePowerOf);
+            return Array.IndexOf(romanZeroToNine, romanSubstring);
+        }
+
+        private static string[] GetRomanZeroToNine(int tenToThePowerOf)
+        {
+            (char symbolOne, char symbolFive, char symbolTen) = GetSymbolOneFiveTenAsCharTuple(tenToThePowerOf);
+
+            return new string[]
+            {
+                "",                                                     // 0
+                new string(symbolOne, 1),                               // 1
+                new string(symbolOne, 2),                               // 2
+                new string(symbolOne, 3),                               // 3
+                string.Concat(symbolOne, symbolFive),                   // 4
+                new string(symbolFive, 1),                              // 5
+                string.Concat(symbolFive, new string(symbolOne, 1)),    // 6
+                string.Concat(symbolFive, new string(symbolOne, 2)),    // 7
+                string.Concat(symbolFive, new string(symbolOne, 3)),    // 8
+                string.Concat(symbolOne, symbolTen)                     // 9
+            };
         }
     }
 }
