@@ -12,11 +12,7 @@ namespace RomanNumeralConverter.Models
         private static readonly string symbolOnes = "IXCM";
         private static readonly string symbolFives = "VLD";
 
-        public static bool HasInvalidRomanCharacter(string roman)
-        {
-            string validRomans = symbolFives + symbolOnes;
-            return roman.Any(r => !validRomans.Contains(r));
-        }
+        public static bool HasInvalidRomanCharacter(string roman) => roman.Any(r => !string.Concat(symbolFives, symbolOnes).Contains(r));
 
         public static int ConvertToInteger(string roman)
         {
@@ -29,18 +25,44 @@ namespace RomanNumeralConverter.Models
             for (int i = 0; i < 3; i++)
             {
                 string romanDigit = romanSplitted[i + 1];
+                string symbolOneFiveTen = GetSymbolOneFiveTen(2 - i);
 
-                char symbolOne = symbolOnes[2 - i];
-                char symbolFive = symbolFives[2 - i];
-                char symbolTen = symbolOnes[3 - i];
-
-                sum += ConvertOneDigitToInteger(romanDigit, symbolOne, symbolFive, symbolTen) * units[i + 1];
+                int integerDigit = ConvertOneDigitToInteger(romanDigit, symbolOneFiveTen);
+                sum += integerDigit * units[i + 1];
             }
 
             return sum;
         }
 
-        public static string[] SplitRomanStringIntoArrayByUnit(string roman)
+        public static string ConvertToRoman(int number)
+        {
+            if (number < 0)
+                throw new ArgumentOutOfRangeException(nameof(number), "Input cannot be below zero.");
+
+            string romanNumeral = "";
+
+            for (int i = 0; i < 3; i++)
+            {
+                int remainder = number % 10;
+                number /= 10;
+
+                string symbolOneFiveTen = GetSymbolOneFiveTen(i);
+
+                string romanNumeralToPrepend = ConvertOneDigitToRoman(remainder, symbolOneFiveTen);
+                romanNumeral = romanNumeralToPrepend + romanNumeral;
+            }
+
+            string MToPrepend = new(symbolOnes.Last(), number);
+            romanNumeral = MToPrepend + romanNumeral;
+
+            return romanNumeral;
+        }
+
+        private static string GetSymbolOneFiveTen(int i) => string.Concat(symbolOnes[i], symbolFives[i], symbolOnes[i + 1]);
+
+        private static (char, char, char) SplitSymbolOneFiveTenToChar(string symbolOneFiveTen) => (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
+
+        private static string[] SplitRomanStringIntoArrayByUnit(string roman)
         {
             string[] romanSplitted = new string[4];
 
@@ -66,10 +88,8 @@ namespace RomanNumeralConverter.Models
 
             for (int i = 1; i <= 3; i++)
             {
-                char symbolOne = symbolOnes[3 - i];
-                char symbolFive = symbolFives[3 - i];
-                char symbolTen = symbolOnes[4 - i];
-                string[] romanNineToOne = GetRomanZeroToNineDigit(symbolOne, symbolFive, symbolTen).Reverse().SkipLast(0).ToArray();
+                string symbolOneFiveTen = GetSymbolOneFiveTen(3 - i);
+                string[] romanNineToOne = GetRomanZeroToNineDigits(symbolOneFiveTen).Reverse().SkipLast(0).ToArray();
 
                 romanSplitted[i] = romanNineToOne.FirstOrDefault(r => roman.StartsWith(r), "");
                 roman = roman[romanSplitted[i].Length..];
@@ -81,34 +101,10 @@ namespace RomanNumeralConverter.Models
             return romanSplitted;
         }
 
-        public static string ConvertToRoman(int number)
+        private static string ConvertOneDigitToRoman(int number, string symbolOneFiveTen)
         {
-            if (number < 0)
-                return "";
+            (char symbolOne, char symbolFive, char symbolTen) = SplitSymbolOneFiveTenToChar(symbolOneFiveTen);
 
-            string romanNumeral = "";
-
-            for (int i = 0; i < 3; i++)
-            {
-                char symbolOne = symbolOnes[i];
-                char symbolFive = symbolFives[i];
-                char symbolTen = symbolOnes[i + 1];
-
-                int remainder = number % 10;
-                number /= 10;
-
-                string romanNumeralToPrepend = ConvertOneDigitToRoman(remainder, symbolOne, symbolFive, symbolTen);
-                romanNumeral = romanNumeralToPrepend + romanNumeral;
-            }
-
-            string MToPrepend = new string(symbolOnes.Last(), number);
-            romanNumeral = MToPrepend + romanNumeral;
-
-            return romanNumeral;
-        }
-
-        private static string ConvertOneDigitToRoman(int number, char symbolOne, char symbolFive, char symbolTen)
-        {
             return number switch
             {
                 0 => "",
@@ -120,8 +116,10 @@ namespace RomanNumeralConverter.Models
             };
         }
 
-        private static string[] GetRomanZeroToNineDigit(char symbolOne, char symbolFive, char symbolTen)
+        private static string[] GetRomanZeroToNineDigits(string symbolOneFiveTen)
         {
+            (char symbolOne, char symbolFive, char symbolTen) = SplitSymbolOneFiveTenToChar(symbolOneFiveTen);
+
             return new string[]
             {
                 "",
@@ -137,10 +135,10 @@ namespace RomanNumeralConverter.Models
             };
         }
 
-        private static int ConvertOneDigitToInteger(string romanDigit, char symbolOne, char symbolFive, char symbolTen)
+        private static int ConvertOneDigitToInteger(string romanDigit, string symbolOneFiveTen)
         {
-            string[] zeroToNineRomanDigit = GetRomanZeroToNineDigit(symbolOne, symbolFive, symbolTen);
-            return Array.IndexOf(zeroToNineRomanDigit, romanDigit);
+            string[] romanZeroToNineDigits = GetRomanZeroToNineDigits(symbolOneFiveTen);
+            return Array.IndexOf(romanZeroToNineDigits, romanDigit);
         }
     }
 }
