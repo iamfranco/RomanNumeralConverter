@@ -59,23 +59,6 @@ namespace RomanNumeralConverter.Models
             return romanString;
         }
 
-        private static string GetSymbolOneFiveTenAsString(int tenToThePowerOf)
-        {
-            if (tenToThePowerOf == 3)
-                return "";
-
-            return string.Concat(
-                _symbolOnes[tenToThePowerOf],
-                _symbolFives[tenToThePowerOf],
-                _symbolOnes[tenToThePowerOf + 1]);
-        }
-
-        private static (char, char, char) GetSymbolOneFiveTenAsCharTuple(int tenToThePowerOf)
-        {
-            string symbolOneFiveTen = GetSymbolOneFiveTenAsString(tenToThePowerOf);
-            return (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
-        }
-
         private static string[] SeparateRomanStringIntoFourPartsByUnits(string roman)
         {
             string[] romanArray = Enumerable.Repeat("", 4).ToArray();
@@ -112,7 +95,7 @@ namespace RomanNumeralConverter.Models
 
         private static string GetRomanSubstringAtTenToThePowerOf(string roman, int tenTothePowerOf)
         {
-            string[] romanNineToOne = GetRomanZeroToNine(tenTothePowerOf).Reverse().SkipLast(0).ToArray();
+            string[] romanNineToOne = GetRomanZeroToNine(tenTothePowerOf).Reverse().SkipLast(1).ToArray();
 
             return romanNineToOne.FirstOrDefault(r => roman.StartsWith(r), "");
         }
@@ -159,6 +142,23 @@ namespace RomanNumeralConverter.Models
                 string.Concat(symbolFive, new string(symbolOne, 3)),    // 8
                 string.Concat(symbolOne, symbolTen)                     // 9
             };
+        }
+
+        private static (char, char, char) GetSymbolOneFiveTenAsCharTuple(int tenToThePowerOf)
+        {
+            string symbolOneFiveTen = GetSymbolOneFiveTenAsString(tenToThePowerOf);
+            return (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
+        }
+
+        private static string GetSymbolOneFiveTenAsString(int tenToThePowerOf)
+        {
+            if (tenToThePowerOf == 3)
+                return "";
+
+            return string.Concat(
+                _symbolOnes[tenToThePowerOf],
+                _symbolFives[tenToThePowerOf],
+                _symbolOnes[tenToThePowerOf + 1]);
         }
     }
 }
