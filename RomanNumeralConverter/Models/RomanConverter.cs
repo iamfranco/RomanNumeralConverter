@@ -63,7 +63,7 @@ namespace RomanNumeralConverter.Models
             string romanString = "";
             while (number > 0)
             {
-                RomanUnit romanUnit = GetRomanUnitLessThanOrEqualTo(number);
+                RomanUnit romanUnit = _romanUnits.First(romanUnit => number >= romanUnit.Unit);
 
                 romanString += romanUnit.Roman;
                 number -= romanUnit.Unit;
@@ -80,9 +80,6 @@ namespace RomanNumeralConverter.Models
 
             return _romanUnits[romanUnitsMatchIndex];
         }
-
-        private static RomanUnit GetRomanUnitLessThanOrEqualTo(int number) => 
-            _romanUnits.First(romanUnit => romanUnit.Unit <= number);
 
         private static void ThrowInvalidRomanNumeralException()
         {
