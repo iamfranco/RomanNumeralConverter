@@ -8,30 +8,53 @@ namespace RomanNumeralConverter.Models
 {
     public static class RomanConverter
     {
-        private static readonly int[] _units = new int[] { 1, 10, 100, 1000 };
-        private static readonly int _unitFactor = 10;
-        private static readonly string _symbolOnes = "IXCM";
-        private static readonly string _symbolFives = "VLD";
+        private static readonly List<RomanUnit> _romanUnits = new()
+        {
+            new("M", 1000),
+            new("CM", 900),
+            new("D", 500),
+            new("CD", 400),
+            new("C", 100),
+            new("XC", 90),
+            new("L", 50),
+            new("XL", 40),
+            new("X", 10),
+            new("IX", 9),
+            new("V", 5),
+            new("IV", 4),
+            new("I", 1)
+        };
 
-        public static bool HasInvalidRomanCharacter(string roman) =>
-            roman.Any(r => !string.Concat(_symbolFives, _symbolOnes).Contains(r));
+        private class RomanUnit
+        {
+            public string Roman { get; set; }
+            public int Unit { get; set; }
+            public RomanUnit(string roman, int unit)
+            {
+                Roman = roman;
+                Unit = unit;
+            }
+        }
 
         public static int ConvertToInteger(string roman)
         {
-            if (HasInvalidRomanCharacter(roman))
-                throw new ArgumentException("Input is not valid Roman Numeral");
-
-            // separate "MMDCCCXCIV" into {"IV", "XC", "DCCC", "MM"}
-            string[] romanSubstringsByUnits = SeparateRomanStringIntoFourPartsByUnits(roman);
+            string romanCopied = roman;
 
             int sum = 0;
-            for (int tenToThePowerOf = 0; tenToThePowerOf <= 3; tenToThePowerOf++)
+            while (roman.Length > 0)
             {
-                string romanSubstring = romanSubstringsByUnits[tenToThePowerOf];
+                int romanUnitsMatchIndex = _romanUnits.FindIndex(romanUnit => roman.StartsWith(romanUnit.Roman));
+                if (romanUnitsMatchIndex == -1)
+                    ThrowInvalidRomanNumeralException();
 
-                int integerDigit = ConvertRomanSubstringToInteger(romanSubstring, tenToThePowerOf);
-                sum += integerDigit * _units[tenToThePowerOf];
+                RomanUnit romanUnitMatch = _romanUnits[romanUnitsMatchIndex];
+
+                sum += romanUnitMatch.Unit;
+                roman = roman[romanUnitMatch.Roman.Length..];
             }
+
+            if (ConvertToRoman(sum) != romanCopied)
+                ThrowInvalidRomanNumeralException();
 
             return sum;
         }
@@ -42,123 +65,22 @@ namespace RomanNumeralConverter.Models
                 throw new ArgumentOutOfRangeException(nameof(number), "Input cannot be below zero.");
 
             string romanString = "";
-
-            for (int tenToThePowerOf = 0; tenToThePowerOf < 3; tenToThePowerOf++)
+            while (number > 0)
             {
-                int remainder = number % _unitFactor;
-                number /= _unitFactor;
+                int romanUnitsMatchIndex = _romanUnits.FindIndex(romanUnit => number >= romanUnit.Unit);
 
-                string romanSubstringToPrepend = ConvertOneDigitToRomanSubstring(remainder, tenToThePowerOf);
-                romanString = romanSubstringToPrepend + romanString;
+                RomanUnit romanUnitMatch = _romanUnits[romanUnitsMatchIndex];
+
+                romanString += romanUnitMatch.Roman;
+                number -= romanUnitMatch.Unit;
             }
-
-            // prepend M's for 1000's place
-            string MToPrepend = new(_symbolOnes.Last(), number);
-            romanString = MToPrepend + romanString;
 
             return romanString;
         }
 
-        private static string[] SeparateRomanStringIntoFourPartsByUnits(string roman)
+        private static void ThrowInvalidRomanNumeralException()
         {
-            string[] romanArray = Enumerable.Repeat("", 4).ToArray();
-
-            string romanSubstringForThousands = GetRomanSubstringAtThousandsPlace(roman);
-            romanArray[3] = romanSubstringForThousands;
-            roman = roman[romanSubstringForThousands.Length..];
-
-            for (int tenTothePowerOf = 2; tenTothePowerOf >= 0; tenTothePowerOf--)
-            {
-                string currentRomanSubstring = GetRomanSubstringAtTenToThePowerOf(roman, tenTothePowerOf);
-                romanArray[tenTothePowerOf] = currentRomanSubstring;
-                roman = roman[currentRomanSubstring.Length..];
-            }
-
-            if (roman.Any())
-                throw new ArgumentException("Input is not valid Roman Numeral");
-
-            return romanArray;
-        }
-
-        private static string GetRomanSubstringAtThousandsPlace(string roman)
-        {
-            if (!roman.StartsWith(_symbolOnes.Last()))
-                return "";
-
-            int firstIndexForNotM = roman.ToList().FindIndex(r => r != _symbolOnes.Last());
-
-            if (firstIndexForNotM == -1)
-                firstIndexForNotM = roman.Length;
-
-            return roman[..firstIndexForNotM];
-        }
-
-        private static string GetRomanSubstringAtTenToThePowerOf(string roman, int tenTothePowerOf)
-        {
-            string[] romanNineToOne = GetRomanZeroToNine(tenTothePowerOf).Reverse().SkipLast(1).ToArray();
-
-            return romanNineToOne.FirstOrDefault(r => roman.StartsWith(r), "");
-        }
-
-        private static string ConvertOneDigitToRomanSubstring(int number, int tenToThePowerOf)
-        {
-            (char symbolOne, char symbolFive, char symbolTen) = GetSymbolOneFiveTenAsCharTuple(tenToThePowerOf);
-
-            return number switch
-            {
-                0 => "",
-                < 4 => new string(symbolOne, number),
-                4 => string.Concat(symbolOne, symbolFive),
-                < 9 => string.Concat(symbolFive, new string(symbolOne, number - 5)),
-                9 => string.Concat(symbolOne, symbolTen),
-                _ => ""
-            };
-        }
-
-        private static int ConvertRomanSubstringToInteger(string romanSubstring, int tenToThePowerOf)
-        {
-            bool substringOnlyHasMs = romanSubstring.All(r => r.ToString() == _symbolOnes.Last().ToString());
-            if (substringOnlyHasMs)
-                return romanSubstring.Length;
-
-            string[] romanZeroToNine = GetRomanZeroToNine(tenToThePowerOf);
-            return Array.IndexOf(romanZeroToNine, romanSubstring);
-        }
-
-        private static string[] GetRomanZeroToNine(int tenToThePowerOf)
-        {
-            (char symbolOne, char symbolFive, char symbolTen) = GetSymbolOneFiveTenAsCharTuple(tenToThePowerOf);
-
-            return new string[]
-            {
-                "",                                                     // 0
-                new string(symbolOne, 1),                               // 1
-                new string(symbolOne, 2),                               // 2
-                new string(symbolOne, 3),                               // 3
-                string.Concat(symbolOne, symbolFive),                   // 4
-                new string(symbolFive, 1),                              // 5
-                string.Concat(symbolFive, new string(symbolOne, 1)),    // 6
-                string.Concat(symbolFive, new string(symbolOne, 2)),    // 7
-                string.Concat(symbolFive, new string(symbolOne, 3)),    // 8
-                string.Concat(symbolOne, symbolTen)                     // 9
-            };
-        }
-
-        private static (char, char, char) GetSymbolOneFiveTenAsCharTuple(int tenToThePowerOf)
-        {
-            string symbolOneFiveTen = GetSymbolOneFiveTenAsString(tenToThePowerOf);
-            return (symbolOneFiveTen[0], symbolOneFiveTen[1], symbolOneFiveTen[2]);
-        }
-
-        private static string GetSymbolOneFiveTenAsString(int tenToThePowerOf)
-        {
-            if (tenToThePowerOf == 3)
-                return "";
-
-            return string.Concat(
-                _symbolOnes[tenToThePowerOf],
-                _symbolFives[tenToThePowerOf],
-                _symbolOnes[tenToThePowerOf + 1]);
+            throw new ArgumentException("Input is not valid Roman Numeral");
         }
     }
 }
