@@ -27,8 +27,8 @@ namespace RomanNumeralConverter.Models
 
         private class RomanUnit
         {
-            public string Roman { get; set; }
-            public int Unit { get; set; }
+            public string Roman { get; }
+            public int Unit { get; }
             public RomanUnit(string roman, int unit)
             {
                 Roman = roman;
@@ -43,14 +43,10 @@ namespace RomanNumeralConverter.Models
             int sum = 0;
             while (roman.Length > 0)
             {
-                int romanUnitsMatchIndex = _romanUnits.FindIndex(romanUnit => roman.StartsWith(romanUnit.Roman));
-                if (romanUnitsMatchIndex == -1)
-                    ThrowInvalidRomanNumeralException();
+                RomanUnit romanUnit = GetRomanUnitMatchingStartOfString(roman);
 
-                RomanUnit romanUnitMatch = _romanUnits[romanUnitsMatchIndex];
-
-                sum += romanUnitMatch.Unit;
-                roman = roman[romanUnitMatch.Roman.Length..];
+                sum += romanUnit.Unit;
+                roman = roman[romanUnit.Roman.Length..];
             }
 
             if (ConvertToRoman(sum) != romanCopied)
@@ -67,16 +63,25 @@ namespace RomanNumeralConverter.Models
             string romanString = "";
             while (number > 0)
             {
-                int romanUnitsMatchIndex = _romanUnits.FindIndex(romanUnit => number >= romanUnit.Unit);
+                RomanUnit romanUnit = GetRomanUnitLessThanOrEqual(number);
 
-                RomanUnit romanUnitMatch = _romanUnits[romanUnitsMatchIndex];
-
-                romanString += romanUnitMatch.Roman;
-                number -= romanUnitMatch.Unit;
+                romanString += romanUnit.Roman;
+                number -= romanUnit.Unit;
             }
 
             return romanString;
         }
+
+        private static RomanUnit GetRomanUnitMatchingStartOfString(string roman)
+        {
+            int romanUnitsMatchIndex = _romanUnits.FindIndex(romanUnit => roman.StartsWith(romanUnit.Roman));
+            if (romanUnitsMatchIndex == -1)
+                ThrowInvalidRomanNumeralException();
+
+            return _romanUnits[romanUnitsMatchIndex];
+        }
+
+        private static RomanUnit GetRomanUnitLessThanOrEqual(int number) => _romanUnits.First(romanUnit => number >= romanUnit.Unit);
 
         private static void ThrowInvalidRomanNumeralException()
         {
