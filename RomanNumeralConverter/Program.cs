@@ -1,7 +1,6 @@
 ﻿using RomanNumeralConverter.Models;
 
 bool IsValidInput = false;
-
 while (!IsValidInput)
 {
     Console.Write("Please enter a Roman Numeral: ");
@@ -9,12 +8,6 @@ while (!IsValidInput)
 
     if (string.IsNullOrEmpty(input))
         continue;
-
-    if (RomanConverter.HasInvalidRomanCharacter(input))
-    {
-        Console.WriteLine("Input contains invalid character (valid characters are: {I, V, X, L, C, D, M})");
-        continue;
-    }
 
     int output;
     try
@@ -28,5 +21,6 @@ while (!IsValidInput)
     }
 
     Console.WriteLine(output);
+    string? _ = Console.ReadLine();
     IsValidInput = true;
 }
